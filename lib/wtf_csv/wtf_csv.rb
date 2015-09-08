@@ -6,52 +6,84 @@ module WtfCSV
       :row_sep => "\n",
       :quote_char => '"',
       :escape_char => '"',
-      :verbose => false ,
-      :headers_in_file => true,
+      :row_sep_in_quoted_fields => false,
       :file_encoding => 'utf-8',
     }
     options = default_options.merge(options)
     
-    case options[:row_sep]
-      when "\n", :lf
-        options[:row_sep] = ["\n"]
-      when "\r", :cr
-        options[:row_sep] = ["\r"]
-      when "\r\n", :crlf
-        options[:row_sep] = ["\r", "\n"]
-      else
-        # do nothing
-    end
+#     case options[:row_sep]
+#       when "\n", :lf
+#         options[:row_sep] = ["\n"]
+#       when "\r", :cr
+#         options[:row_sep] = ["\r"]
+#       when "\r\n", :crlf
+#         options[:row_sep] = ["\r", "\n"]
+#       else
+#         # do nothing
+#     end
+    
+    File.write("test_csv.csv","header1,header2\n\"valA\"\",valB\"\nvalC,valD")
     
     quoteErrors = Array.new
     columnErrors = Array.new
     charErrors = Array.new
     
-    File.open(file) do |f|
-      ###################################
-      # INITIALIZE A BUNCH OF STUFF
-      line = ""
-      charPositionInLine = -1
-      lineNumber = 0
-      col = 0
-      posStart = 0
-      posEnd = 0
-      columnCount = -1
+    separator = true
+    escaped = false
+    tmpError = false
+    isQuoted = false
+    wasQuoted = false
+    willNotBeQuoted = false
+    
+    posStart = 0
+    lineNumber = -1  # not using with_index on the loop because it needs to be scoped outside the loop
+    col = 0
+    columnCount = 0
+    prevLine = ""
+    
+    File.foreach(file, options[:row_sep]) do |line|
+      if flag
+        puts "line ##{lineNumber + 1}: #{line}"
+        puts "col: #{col}"
+        puts "columnCount: #{columnCount}"
+      end
       
-      quoted = false
+      if col > 0 and columnCount == 0
+        columnCount = col + 1
+      end
+      
+      if columnCount > 0 and ((col + 1) != columnCount)
+        columnErrors.push("#{lineNumber + 1},#{col + 1},#{columnCount}")
+      end
+      
+      if isQuoted
+        if options[:row_sep] == "\r\n"
+          offset = 3
+        else
+          offset = 2
+        end
+        quoteErrors.push("#{lineNumber + 1},#{col + 1},#{prevLine[posStart..(prevLine.length - offset)]}")
+      end
+      prevLine = line
+      
       separator = true
       escaped = false
       tmpError = false
-      noQuotesInCell = false
-      ###################################
+      isQuoted = false
+      willNotBeQuoted = false
+      wasQuoted = false
       
-      f.each_char do |char|
-        puts "#{char} (#{char.ord})" if flag
-        
-        line += char
-        charPositionInLine += 1
-        puts "quoted: #{quoted}" if flag
-        puts "noQuotesInCell: #{noQuotesInCell}" if flag
+      posStart = 0
+      lineNumber += 1
+      col = 0
+      
+      line.each_char.with_index do |char, charPositionInLine|
+        if flag
+          puts "\n#{char} (#{char.ord})"
+          puts "isQuoted:        #{isQuoted}"
+          puts "willNotBeQuoted: #{willNotBeQuoted}"
+          puts "wasQuoted:       #{wasQuoted}"
+        end
         
         begin
           if escaped
@@ -59,12 +91,12 @@ module WtfCSV
             escaped = false
             if (options[:quote_char] == options[:escape_char]) and char != options[:quote_char]
               puts "  >a a" if flag
-              quoted = !quoted
               
-              if !quoted
-                endOfQuote = true
-              elsif noQuotesInCell
+              if !isQuoted and willNotBeQuoted
                 tmpError = true
+              else
+                isQuoted = !isQuoted
+                wasQuoted = true if !isQuoted
               end
               
             else
@@ -80,13 +112,13 @@ module WtfCSV
           
           if char != options[:quote_char] and char != options[:escape_char] and char != options[:col_sep] and not options[:row_sep].include? char
             puts "  >b" if flag
-            if endOfQuote
+            if wasQuoted
               tmpError = true
-              endOfQuote = false
+              wasQuoted = false
             end
-            
-            if !quoted
-              noQuotesInCell = true
+             
+            if !isQuoted
+              willNotBeQuoted = true
             end
             
             next
@@ -98,7 +130,7 @@ module WtfCSV
             next
           end
           
-          if char == options[:col_sep] and !quoted
+          if char == options[:col_sep] and !isQuoted
             puts "  >d" if flag
             if tmpError
               quoteErrors.push("#{lineNumber + 1},#{col + 1},#{line[posStart..(charPositionInLine - 1)]}")
@@ -106,56 +138,38 @@ module WtfCSV
             end
             
             posStart = charPositionInLine + 1
-            noQuotesInCell = false
+            willNotBeQuoted = false
             col += 1
           end
           
           if char == options[:quote_char]
             puts "  >e" if flag
-            quoted = true
             
-            if noQuotesInCell
+            if willNotBeQuoted
               tmpError = true
+            else
+              isQuoted = true
             end
           end
-          
-          if options[:row_sep].include? char
-            puts "  >f (#{(options[:row_sep][0]).ord})" if flag
-            if options[:row_sep][0] == "\n" and char == "\n"
-              puts "  >g" if flag
-              
-              if quoted
-                tmpError = true
-              end
-              
-              if tmpError
-                quoteErrors.push("#{lineNumber + 1},#{col + 1},#{line[posStart..(charPositionInLine - 1)]}")
-                tmpError = false
-              end
-              
-              if columnCount == -1
-                columnCount = col + 1
-              end
-              
-              if (col + 1) != columnCount
-                columnErrors.push("#{lineNumber + 1},#{col + 1},#{columnCount}")
-              end
-              
-              lineNumber += 1
-              charPositionInLine = -1
-              line = ""
-              col = 0
-              posStart = 0
-              quoted = false
-              noQuotesInCell = false
-            end
-          end
-          	
-        rescue Exception => ex
-          #puts ex
-          # who cares? probably not a UTF-8 character, or we're doing .ord on a null class
+        
+        rescue Exception => msg
+          # puts msg
         end
       end
+    end
+    
+    # we still need to check that the last line/cell is ok
+    if isQuoted
+      if options[:row_sep] == "\r\n"
+        offset = 3
+      else
+        offset = 2
+      end
+      quoteErrors.push("#{lineNumber + 1},#{col + 1},#{prevLine[posStart..(prevLine.length - offset)]}")
+    end
+    
+    if columnCount > 0 and ((col + 1) != columnCount)
+      columnErrors.push("#{lineNumber + 1},#{col + 1},#{columnCount}")
     end
     
     return {quote_errors: quoteErrors,
