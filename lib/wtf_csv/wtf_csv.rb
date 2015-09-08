@@ -1,53 +1,51 @@
 module WtfCSV
-  
-	def self.scan(file, options = {}, flag = false)
-	
-		default_options = {
-			:col_sep => ',',
-			:row_sep => "\n",
-			:quote_char => '"',
-			:escape_char => '"',
-			:verbose => false ,
+  def self.scan(file, options = {}, flag = false)
+    
+    default_options = {
+      :col_sep => ',',
+      :row_sep => "\n",
+      :quote_char => '"',
+      :escape_char => '"',
+      :verbose => false ,
       :headers_in_file => true,
       :file_encoding => 'utf-8',
     }
     options = default_options.merge(options)
     
-		case options[:row_sep]
-			when "\n", :lf
-				options[:row_sep] = ["\n"]
-			when "\r", :cr
-				options[:row_sep] = ["\r"]
-			when "\r\n", :crlf
-				options[:row_sep] = ["\r", "\n"]
-			else
-				# do nothing
-		end
-		
-	  quoteErrors = Array.new
-		columnErrors = Array.new
-  	charErrors = Array.new
-  	
-  	File.open(file) do |f|
-    	
-			###################################
+    case options[:row_sep]
+      when "\n", :lf
+        options[:row_sep] = ["\n"]
+      when "\r", :cr
+        options[:row_sep] = ["\r"]
+      when "\r\n", :crlf
+        options[:row_sep] = ["\r", "\n"]
+      else
+        # do nothing
+    end
+    
+    quoteErrors = Array.new
+    columnErrors = Array.new
+    charErrors = Array.new
+    
+    File.open(file) do |f|
+      ###################################
       # INITIALIZE A BUNCH OF STUFF
       line = ""
-			charPositionInLine = -1
-			lineNumber = 0
-			col = 0
-			posStart = 0
-		  posEnd = 0
-		  columnCount = -1
-
-			quoted = false
-			separator = true
-			escaped = false
-			tmpError = false
-			noQuotesInCell = false
-			###################################
-			
-			f.each_char do |char|
+      charPositionInLine = -1
+      lineNumber = 0
+      col = 0
+      posStart = 0
+      posEnd = 0
+      columnCount = -1
+      
+      quoted = false
+      separator = true
+      escaped = false
+      tmpError = false
+      noQuotesInCell = false
+      ###################################
+      
+      f.each_char do |char|
 			  puts "#{char} (#{char.ord})" if flag
 				
 				line += char
