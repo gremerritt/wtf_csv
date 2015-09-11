@@ -143,21 +143,21 @@ module WtfCSV
       column_counts.reverse!
       
       # if we're looking for an absolute number...
-			if options[:num_cols] != 0
-				column_counts.each do |val|
-					if val[0] != options[:num_cols]
-						val[1].each { |row| column_errors.push([row,val[0],options[:num_cols]]) }
-					end
-				end
-			
-			# else we'll try to figure out the target number of columns with :col_threshold
-			elsif column_counts.length > 1
-			  if column_counts[0][1].length >= line_count * (options[:col_threshold].to_f / 100)
-			    column_counts.drop(1).each { |val| val[1].each { |row| column_errors.push([row,val[0],column_counts[0][0]]) } }
-			  else
-			    column_counts.each { |val| column_errors.push([val[0],val[1].length]) }
-			  end
-			end
+      if options[:num_cols] != 0
+        column_counts.each do |val|
+          if val[0] != options[:num_cols]
+            val[1].each { |row| column_errors.push([row,val[0],options[:num_cols]]) }
+          end
+        end
+      
+      # else we'll try to figure out the target number of columns with :col_threshold
+      elsif column_counts.length > 1
+        if column_counts[0][1].length >= line_count * (options[:col_threshold].to_f / 100)
+          column_counts.drop(1).each { |val| val[1].each { |row| column_errors.push([row,val[0],column_counts[0][0]]) } }
+        else
+          column_counts.each { |val| column_errors.push([val[0],val[1].length]) }
+        end
+      end
     end
     
     if options[:check_col_count]
@@ -166,34 +166,5 @@ module WtfCSV
     else
       return {quote_errors: quote_errors}
     end
-  end
-  
-  
-  def self.guess_line_ending( filehandle, options )
-    counts = {"\n" => 0 , "\r" => 0, "\r\n" => 0}
-    quoted_char = false
-
-    # count how many of the pre-defined line-endings we find
-    # ignoring those contained within quote characters
-    last_char = nil
-    filehandle.each_char do |c|
-      quoted_char = !quoted_char if c == options[:quote_char]
-      next if quoted_char
-
-      if last_char == "\r"
-        if c == "\n"
-          counts["\r\n"] +=  1
-        else
-          counts["\r"] += 1  # \r are counted after they appeared, we might
-        end
-      elsif c == "\n"
-        counts["\n"] += 1
-      end
-      last_char = c
-    end
-    counts["\r"] += 1 if last_char == "\r"
-    # find the key/value pair with the largest counter:
-    k,v = counts.max_by{|k,v| v}
-    return k                    # the most frequent one is it
   end
 end
