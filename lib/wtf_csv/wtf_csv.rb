@@ -1,14 +1,14 @@
 module WtfCSV
-  def self.scan(file, options = {}, debug = false)
+  def WtfCSV.scan(file, options = {}, debug = false)
     
     default_options = {
       :col_sep => ',',
-      :row_sep => "\n",
+      :row_sep => $/,
       :quote_char => '"',
-      :escape_char => '"',
+      :escape_char => '\\',
       :check_col_count => true,
-      :num_cols => 0,
       :col_threshold => 80,
+      :num_cols => 0,
       :allow_row_sep_in_quoted_fields => false,
       :file_encoding => 'utf-8',
     }
@@ -23,6 +23,11 @@ module WtfCSV
     line_count = 0
     
     f = file.respond_to?(:readline) ? file : File.open(file, "r:#{options[:file_encoding]}")
+    
+    if options[:row_sep] == :auto
+      options[:row_sep] = SmarterCSV.guess_line_ending(f, options)
+      f.rewind
+    end
     
     # credit to tilo, author of smarter_csv, on how to loop over lines without reading whole file into memory
     old_row_sep = $/
@@ -161,5 +166,34 @@ module WtfCSV
     else
       return {quote_errors: quote_errors}
     end
+  end
+  
+  
+  def self.guess_line_ending( filehandle, options )
+    counts = {"\n" => 0 , "\r" => 0, "\r\n" => 0}
+    quoted_char = false
+
+    # count how many of the pre-defined line-endings we find
+    # ignoring those contained within quote characters
+    last_char = nil
+    filehandle.each_char do |c|
+      quoted_char = !quoted_char if c == options[:quote_char]
+      next if quoted_char
+
+      if last_char == "\r"
+        if c == "\n"
+          counts["\r\n"] +=  1
+        else
+          counts["\r"] += 1  # \r are counted after they appeared, we might
+        end
+      elsif c == "\n"
+        counts["\n"] += 1
+      end
+      last_char = c
+    end
+    counts["\r"] += 1 if last_char == "\r"
+    # find the key/value pair with the largest counter:
+    k,v = counts.max_by{|k,v| v}
+    return k                    # the most frequent one is it
   end
 end
