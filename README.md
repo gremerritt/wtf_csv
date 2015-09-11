@@ -10,13 +10,11 @@ The CSV file format is meant to be an easy way to transport data. Anyone who has
 This gem seeks to make this process less terrible by providing a way to easily surface common formatting issues on a CSV file.
 
 `WtfCSV.scan` has the following options:
-     | Option                          | Default  |  Explanation                                                                         |
-     -------------------------------------------------------------------------------------------------------------------------------------
-     | :col_sep                        |   ','    | Column separator                                                                     |
-     | :row_sep                        | $/ ,"\n" | Row separator - defaults to system's $/ , which defaults to "\n"                     |
-     |                                 |          | This can also be set to :auto, but will process the whole cvs file first  (slow!)    |
-     | :quote_char                     |   '"'    | Quotation character                                                                  |
-     | :escape_char                    |   '\'    | Character to escape quotes                                                           |
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+
 If you happen upon this, know that this is in it's infancy. Eventually this will be available on https://rubygems.org, where you'll be able to install with `gem install wtf_csv` or putting `require 'wtf_csv'` in your gemfile. Until them, feel free to install from source and bundle it into a gem yourself - just give proper credit where it is due.
 
 See `lib/wtf_csv/test_script.rb` for an example implementation.
