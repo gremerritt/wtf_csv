@@ -9,12 +9,14 @@ module WtfCSV
       :check_col_count => true,
       :col_threshold => 80,
       :num_cols => 0,
+      :ignore_string => nil,
       :allow_row_sep_in_quoted_fields => false,
       :file_encoding => 'utf-8',
     }
     options = default_options.merge(options)
     
     quote_errors = Array.new
+    encoding_errors = Array.new
     if options[:check_col_count]
       column_errors = Array.new
       column_counts = Array.new
@@ -40,6 +42,8 @@ module WtfCSV
         line = f.readline
         begin
           line.chomp!
+          
+          next if ! options[:ignore_string].nil? and line == options[:ignore_string]
           
           # if there are any escaped quotes, throw them out
           line.gsub!("#{options[:escape_char]}#{options[:quote_char]}", '')
@@ -128,10 +132,13 @@ module WtfCSV
             end
           end
           
+        rescue Exception => e
+          puts e.message
+          if e.message == 'invalid byte sequence in UTF-8'
+            encoding_errors.push([line_count + 1,e.message])
+          end
+        ensure
           line_count += 1
-          
-        rescue Exception => msg
-          # puts msg
         end
       end
     ensure
@@ -162,9 +169,11 @@ module WtfCSV
     
     if options[:check_col_count]
       return {quote_errors: quote_errors,
+              encoding_errors: encoding_errors,
               column_errors: column_errors}
     else
-      return {quote_errors: quote_errors}
+      return {quote_errors: quote_errors,
+              encoding_errors: encoding_errors}
     end
   end
 end
