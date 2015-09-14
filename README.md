@@ -28,13 +28,16 @@ This gem seeks to make this process less terrible by providing a way to easily s
 |                                 |          |   For example, if there are 10 line in the file, and this value is set to 80, then   |
 |                                 |          |   at least 8 lines must have a certain number of columns for the module to assume    |
 |                                 |          |   this is the number of columns that rows are supposed to have                       |
+|---------------------------------|----------|--------------------------------------------------------------------------------------|
 | :ignore_string                  |   nil    | If a line is equal to this string, the line will not be checked for issues           |
 |---------------------------------|----------|--------------------------------------------------------------------------------------|
 | :allow_row_sep_in_quoted_fields |  false   | Allows :row_sep characters to be present in quoted fields. Otherwise if there are    |
 |                                 |          | line ending characters in a field, they will be treat as sequential lines and you'll |
 |                                 |          | likely receive column count errors (if you're checking for them)                     |
 |---------------------------------|----------|--------------------------------------------------------------------------------------|
-| :file_encoding                  | 'utf-8'  | Set the file encoding
+| :max_chars_in_field             |   nil    | Ensures that fields have less than or equal to the provided number of characters     |
+|---------------------------------|----------|--------------------------------------------------------------------------------------|
+| :file_encoding                  | 'utf-8'  | Set the file encoding                                                                |
 |---------------------------------|----------|--------------------------------------------------------------------------------------|
 ```
 
