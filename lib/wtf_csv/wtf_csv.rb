@@ -2,7 +2,6 @@ module WtfCSV
   def WtfCSV.scan(file, options = {}, debug = false)
     
     # NOTES/KNOWN ISSUES
-    #    can col_number be in this block, or should it be scoped up?
     #    :max_chars_in_field doesn't count escaped quoted since we've already tossed them
     
     default_options = {
@@ -20,18 +19,6 @@ module WtfCSV
     }
     options = default_options.merge(options)
     
-    quote_errors = Array.new
-    encoding_errors = Array.new
-    if options[:check_col_count]
-      column_errors = Array.new
-      column_counts = Array.new
-    end
-    if ! options[:max_chars_in_field].nil?
-      length_errors = Array.new
-    end
-    
-    line_count = 0
-    
     f = file.respond_to?(:readline) ? file : File.open(file, "r:#{options[:file_encoding]}")
     
     if options[:row_sep] == :auto
@@ -43,8 +30,20 @@ module WtfCSV
     old_row_sep = $/
     $/ = options[:row_sep]
     
-    last_line_ended_quoted = false if options[:allow_row_sep_in_quoted_fields]
+    quote_errors = Array.new
+    encoding_errors = Array.new
+    if options[:check_col_count]
+      column_errors = Array.new
+      column_counts = Array.new
+    end
+    if ! options[:max_chars_in_field].nil?
+      length_errors = Array.new
+    end
+    
+    line_number = 0
+    col_number = 0
     previous_line = ""
+    last_line_ended_quoted = false if options[:allow_row_sep_in_quoted_fields]
     field_length = 0 if ! options[:max_chars_in_field].nil?
     
     begin
@@ -59,7 +58,7 @@ module WtfCSV
           line.gsub!("#{options[:escape_char]}#{options[:quote_char]}", '')
           
           if options[:allow_row_sep_in_quoted_fields] and last_line_ended_quoted
-            line_count -= 1
+            line_number -= 1
             last_line_ended_quoted = false
             field_length += options[:row_sep].length
           else
@@ -73,7 +72,6 @@ module WtfCSV
           
           line.each_char.with_index do |char, position|
             field_length += 1 if ! options[:max_chars_in_field].nil?
-            puts "#{char}: #{field_length}" if line_count == 2 and col_number == 2
             
             if char != options[:quote_char] and char != options[:col_sep]
               new_col = false
@@ -92,11 +90,11 @@ module WtfCSV
               end
             elsif char == options[:col_sep] and ! is_quoted
               if quote_error
-                quote_errors.push([line_count + 1,col_number + 1,"#{previous_line}#{line[pos_start..(position - 1)]}"])
+                quote_errors.push([line_number + 1,col_number + 1,"#{previous_line}#{line[pos_start..(position - 1)]}"])
                 quote_error = false
               end
               if ! options[:max_chars_in_field].nil?
-                length_errors.push([line_count + 1,col_number + 1]) if (field_length - 1) > options[:max_chars_in_field]
+                length_errors.push([line_number + 1,col_number + 1]) if (field_length - 1) > options[:max_chars_in_field]
                 field_length = 0
               end
               new_col = true
@@ -117,10 +115,10 @@ module WtfCSV
             end
           end
           
-          quote_errors.push([line_count + 1,col_number + 1,line[pos_start..line.length]]) if quote_error
+          quote_errors.push([line_number + 1,col_number + 1,line[pos_start..line.length]]) if quote_error
           
           if ! options[:max_chars_in_field].nil?
-            length_errors.push([line_count + 1,col_number + 1]) if field_length > options[:max_chars_in_field]
+            length_errors.push([line_number + 1,col_number + 1]) if field_length > options[:max_chars_in_field]
             field_length = 0
           end
           
@@ -128,23 +126,23 @@ module WtfCSV
             fnd = false
             column_counts.each do |val|
               if val[0] == col_number + 1
-                val[1].push(line_count)
+                val[1].push(line_number)
                 fnd = true
                 break
               end
             end
             
             if ! fnd
-              column_counts.push([col_number + 1, [line_count + 1]])
+              column_counts.push([col_number + 1, [line_number + 1]])
             end
           end
           
         rescue Exception => e
           if e.message == 'invalid byte sequence in UTF-8'
-            encoding_errors.push([line_count + 1,e.message])
+            encoding_errors.push([line_number + 1,e.message])
           end
         ensure
-          line_count += 1
+          line_number += 1
         end
       end
     ensure
@@ -165,7 +163,7 @@ module WtfCSV
       
       # else we'll try to figure out the target number of columns with :col_threshold
       elsif column_counts.length > 1
-        if column_counts[0][1].length >= line_count * (options[:col_threshold].to_f / 100)
+        if column_counts[0][1].length >= line_number * (options[:col_threshold].to_f / 100)
           column_counts.drop(1).each { |val| val[1].each { |row| column_errors.push([row,val[0],column_counts[0][0]]) } }
         else
           column_counts.each { |val| column_errors.push([val[0],val[1].length]) }
