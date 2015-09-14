@@ -87,19 +87,19 @@ module WtfCSV
               
               field_length += 1 if ! options[:max_chars_in_field].nil?
               
-              if escape_char and options[:escape_char] == options[:quote_char] and char != options[:quote_char]  ##
+              if escape_char and options[:escape_char] == options[:quote_char] and char != options[:quote_char]
                 puts " > a" if debug and line_number == 0
                 escape_char = false
-                is_quoted = ! is_quoted      ##
-                if ! is_quoted               ##
+                is_quoted = ! is_quoted
+                if ! is_quoted
                   puts " > a a" if debug and line_number == 0
-                  quote_has_ended = true     ##
+                  quote_has_ended = true
                 elsif ! new_col
                   puts " > a b" if debug and line_number == 0
                   quote_error = true
                   is_quoted = false
-                end                          ##
-              end                            ##
+                end
+              end
               
               if char != options[:quote_char] and char != options[:col_sep] and char != options[:escape_char] ## escape_char part
                 puts " > b" if debug and line_number == 0
@@ -109,13 +109,13 @@ module WtfCSV
                   quote_error = true
                 end
               
-              elsif char == options[:quote_char] and escape_char  ##
+              elsif char == options[:quote_char] and escape_char
                 puts " > c" if debug and line_number == 0
-                escape_char = false                               ##
+                escape_char = false
               
-              elsif char == options[:escape_char]                 ##
+              elsif char == options[:escape_char]
                 puts " > d" if debug and line_number == 0
-                escape_char = true                                ##
+                escape_char = true
                 
               elsif char == options[:quote_char] and is_quoted
                 puts " > e" if debug and line_number == 0
@@ -205,8 +205,6 @@ module WtfCSV
     ensure
       $/ = old_row_sep
     end
-    
-    puts "final line count: #{line_number + 1}"
     
     if options[:check_col_count]
       column_counts.sort_by! { |val| val[1].length }
