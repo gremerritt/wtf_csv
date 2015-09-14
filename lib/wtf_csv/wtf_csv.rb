@@ -3,7 +3,6 @@ module WtfCSV
     
     # NOTES/KNOWN ISSUES
     #    can col_number be in this block, or should it be scoped up?
-    #    letter after closed quote in last column isn't caught
     #    :max_chars_in_field doesn't count escaped quoted since we've already tossed them
     
     default_options = {
@@ -114,9 +113,11 @@ module WtfCSV
               previous_line = "#{previous_line}#{line[pos_start...line.length]}#{options[:row_sep]}"
               next
             else
-              quote_errors.push([line_count + 1,col_number + 1,line[pos_start..line.length]])
+              quote_error = true
             end
           end
+          
+          quote_errors.push([line_count + 1,col_number + 1,line[pos_start..line.length]]) if quote_error
           
           if ! options[:max_chars_in_field].nil?
             length_errors.push([line_count + 1,col_number + 1]) if field_length > options[:max_chars_in_field]
