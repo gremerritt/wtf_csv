@@ -15,5 +15,7 @@ Gem::Specification.new do |s|
   s.licenses      = ['MIT']
   
   s.add_runtime_dependency 'smarter_csv'
+  s.add_development_dependency 'rspec'
+  
   s.requirements << 'smarter_csv'
 end

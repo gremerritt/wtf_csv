@@ -1,5 +1,6 @@
 module WtfCSV
-  def WtfCSV.scan(file, options = {}, debug = false, &block)
+  def WtfCSV.scan(file, options = {}, &block)
+    debug = false
     
     default_options = {
       :col_sep => ',',
