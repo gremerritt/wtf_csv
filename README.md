@@ -13,11 +13,10 @@ This gem seeks to make this process less terrible by providing a way to easily s
 
 ## Documentation
 
-`WtfCSV.scan` will return a hash with four keys: `:quote_errors`, `:encoding_errors`, `:column_errors`, and `:length_errors`
-Each key's value will be an array of the issues that were found including information about the issue, in the format described below.
+`WtfCSV.scan` will return a hash with four keys: `:quote_errors`, `:encoding_errors`, `:column_errors`, and `:length_errors`. Each key's value will be an array of the issues that were found including information about the issue, in the format described below.
 
 ### :quote_errors
-`[<line number>, <column_number<, <text of thet improperly quoted field>]`
+`[<line number>, <column_number<, <text of the improperly quoted field>]`
 
 ### :encoding_errors
 `[<line number>, <column number>]`
@@ -26,9 +25,11 @@ Each key's value will be an array of the issues that were found including inform
 This array will always be empty if the `:check_col_count` is set to `false`
 
 If `WtfCSV.scan` was able to determine how many columns should be in each row, either by using the `:col_threshold` option or because the `:num_cols` option was set, the format will be:
+
 `[<line number>, <number of columns in the line>, <number of columns that should be in the line>]`
 
 If `WtfCSV.scan` wasn't able to determine how many columns should be in each row (because an adequate number of columns weren't above the `:col_threshold` percentage) the format will be:
+
 `[<number of columns>, <number of rows that have this number of columns>]`
 
 ### :length_errors
@@ -86,7 +87,7 @@ Or install it yourself as:
 
 ## Bugs and Feature Requests
 
-Please [open an Issue on GitHub](https://github.com/gremerritt/wtf_csv/issues) with an bugs or feature requests. Thanks!
+Please [open an Issue on GitHub](https://github.com/gremerritt/wtf_csv/issues) with any bugs or feature requests. Thanks!
 
 ## Contributing
 
