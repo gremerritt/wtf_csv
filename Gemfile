@@ -1,7 +1,9 @@
 source 'https://rubygems.org'
-  # required gems in .gemspec
-  gem "rake"
-  group :test do
-    gem "rspec"
-  end
+
+ruby ">=1.9.2"
+gem "rake"
+group :test do
+  gem "rspec"
+end
+  
 gemspec

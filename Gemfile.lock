@@ -1,13 +1,14 @@
 PATH
   remote: .
   specs:
-    wtf_csv (0.0.0)
+    wtf_csv (1.0.0)
       smarter_csv
 
 GEM
   remote: https://rubygems.org/
   specs:
     diff-lcs (1.2.5)
+    rake (10.4.2)
     rspec (3.3.0)
       rspec-core (~> 3.3.0)
       rspec-expectations (~> 3.3.0)
@@ -27,5 +28,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  rake
   rspec
   wtf_csv!
