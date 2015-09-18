@@ -16,7 +16,7 @@ This gem seeks to make this process less terrible by providing a way to easily s
 `WtfCSV.scan` will return a hash with four keys: `:quote_errors`, `:encoding_errors`, `:column_errors`, and `:length_errors`. Each key's value will be an array of the issues that were found including information about the issue, in the format described below.
 
 ### :quote_errors
-`[<line number>, <column_number<, <text of the improperly quoted field>]`
+`[<line number>, <column_number>, <text of the improperly quoted field>]`
 
 ### :encoding_errors
 `[<line number>, <column number>]`

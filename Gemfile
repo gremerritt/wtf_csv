@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 
-ruby ">=1.9.2"
+ruby ">1.8.7"
 gem "rake"
-group :test do
-  gem "rspec"
-end
+# group :test do
+#   gem "rspec"
+# end
   
 gemspec
