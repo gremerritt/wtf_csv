@@ -41,4 +41,4 @@ This gem seeks to make this process less terrible by providing a way to easily s
 |---------------------------------|----------|--------------------------------------------------------------------------------------|
 ```
 
-If you happen upon this, know that this is in development - though should be reasonably stable at this point. Soon this will be available on https://rubygems.org, where you'll be able to install with `gem install wtf_csv` or putting `require 'wtf_csv'` in your gemfile. Until them, feel free to install from source and bundle it into a gem yourself - just give proper credit where it is due.
+If you happen upon this, know that this is in development - though should be very stable at this point. Soon this will be available on https://rubygems.org, where you'll be able to install with `gem install wtf_csv` or putting `require 'wtf_csv'` in your gemfile. Until then, feel free to install from source and bundle it into a gem yourself - just give credit where it is due.
