@@ -1,13 +1,42 @@
-# wtf_csv
-Ruby gem to detect formatting issues in a CSV
+# WtfCSV
+`wtf_csv` is a Ruby Gem to detect formatting issues in a CSV
+
+### Motivation
 
 The CSV file format is meant to be an easy way to transport data. Anyone who has had to maintain an import process, however, knows that it's easy to mess up. Usually the entire landscape looks like this:
   1. An importer expects CSV files to be provided in some specific format
   2. The files are given in a different format
   3. The import fails; or even worse, the import succeeds but the data is mangled
-  4. Some poor souls must dig through the CSV file to figure out what happened. Usually issues are related to bad cell quoting, inconsistent column counts, etc.
+  4. Some poor soul must dig through the CSV file to figure out what happened. Usually issues are related to bad cell quoting, inconsistent column counts, etc.
   
-This gem seeks to make this process less terrible by providing a way to easily surface common formatting issues on a CSV file.
+This gem seeks to make this process less terrible by providing a way to easily surface common formatting issues in a CSV file.
+
+## Documentation
+
+`WtfCSV.scan` will return a hash with four keys: `:quote_errors`, `:encoding_errors`, `:column_errors`, and `:length_errors`
+Each key's value will be an array of the issues that were found including information about the issue, in the format described below.
+
+### :quote_errors
+`[<line number>, <column_number<, <text of thet improperly quoted field>]`
+
+### :encoding_errors
+`[<line number>, <column number>]`
+
+### :column_errors
+This array will always be empty if the `:check_col_count` is set to `false`
+
+If `WtfCSV.scan` was able to determine how many columns should be in each row, either by using the `:col_threshold` option or because the `:num_cols` option was set, the format will be:
+`[<line number>, <number of columns in the line>, <number of columns that should be in the line>]`
+
+If `WtfCSV.scan` wasn't able to determine how many columns should be in each row (because an adequate number of columns weren't above the `:col_threshold` percentage) the format will be:
+`[<number of columns>, <number of rows that have this number of columns>]`
+
+### :length_errors
+This array will always be empty unless the `:max_chars_in_field` option is being used
+
+`[<line number>, <column number>, <field length>]`
+
+## Configuration
 
 `WtfCSV.scan` has the following options:
 ```
@@ -41,4 +70,28 @@ This gem seeks to make this process less terrible by providing a way to easily s
 |---------------------------------|----------|--------------------------------------------------------------------------------------|
 ```
 
-If you happen upon this, know that this is in development - though should be very stable at this point. Soon this will be available on https://rubygems.org, where you'll be able to install with `gem install wtf_csv` or putting `require 'wtf_csv'` in your gemfile. Until then, feel free to install from source and bundle it into a gem yourself - just give credit where it is due.
+## Installation
+
+Add this line to your application's Gemfile:
+
+    gem 'wtf_csv'
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install wtf_csv
+
+## Bugs and Feature Requests
+
+Please [open an Issue on GitHub](https://github.com/gremerritt/wtf_csv/issues) with an bugs or feature requests. Thanks!
+
+## Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b new-feature`)
+3. Commit your changes (`git commit -am 'adds a new feature'`)
+4. Push to the branch (`git push origin new-feature`)
+5. Create new Pull Request
