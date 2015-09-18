@@ -18,7 +18,7 @@ module WtfCSV
     options = default_options.merge(options)
     
     f = File.open(file, "r:#{options[:file_encoding]}")
-    trgt_line_count = `wc -l "#{file}"`.strip.split(' ')[0].to_i
+    trgt_line_count = `wc -l "#{file}"`.strip.split(' ')[0].to_i if block_given?
     
     if options[:row_sep] == :auto
       options[:row_sep] = SmarterCSV.guess_line_ending(f, options)
@@ -31,13 +31,9 @@ module WtfCSV
     
     quote_errors = Array.new
     encoding_errors = Array.new
-    if options[:check_col_count]
-      column_errors = Array.new
-      column_counts = Array.new
-    end
-    if ! options[:max_chars_in_field].nil?
-      length_errors = Array.new
-    end
+    column_errors = Array.new
+    column_counts = Array.new if options[:check_col_count]
+    length_errors = Array.new
     
     line_number = 0
     col_number = 0
@@ -50,7 +46,7 @@ module WtfCSV
       while ! f.eof?
         line = f.readline
         begin
-          if ((line_number.to_f / trgt_line_count)*100).to_i > percent_done
+          if block_given? and ((line_number.to_f / trgt_line_count)*100).to_i > percent_done
             percent_done = ((line_number.to_f / trgt_line_count)*100).to_i
             yield percent_done
           end
@@ -60,10 +56,12 @@ module WtfCSV
           next if ! options[:ignore_string].nil? and line == options[:ignore_string]
           
           if options[:allow_row_sep_in_quoted_fields] and last_line_ended_quoted
+            puts " > i" if debug
             line_number -= 1
             last_line_ended_quoted = false
-            field_length += options[:row_sep].length
+            field_length += options[:row_sep].length if ! options[:max_chars_in_field].nil?
           else
+            puts " > j" if debug
             is_quoted = false
             new_col = true
             quote_has_ended = false
@@ -77,8 +75,10 @@ module WtfCSV
             begin
               char.ord  # this is here to check encoding. if the encoding is bad this will throw an exception
               
-              if debug and line_number == 0
+              if debug
                 puts "\n#{char}"
+                puts "line_number: #{line_number}"
+                puts "col_number: #{col_number}"
                 puts "is_quoted: #{is_quoted}"
                 puts "new_col: #{new_col}"
                 puts "quote_has_ended: #{quote_has_ended}"
@@ -89,59 +89,59 @@ module WtfCSV
               field_length += 1 if ! options[:max_chars_in_field].nil?
               
               if escape_char and options[:escape_char] == options[:quote_char] and char != options[:quote_char]
-                puts " > a" if debug and line_number == 0
+                puts " > a" if debug
                 escape_char = false
                 is_quoted = ! is_quoted
                 if ! is_quoted
-                  puts " > a a" if debug and line_number == 0
+                  puts " > a a" if debug
                   quote_has_ended = true
                 elsif ! new_col
-                  puts " > a b" if debug and line_number == 0
+                  puts " > a b" if debug
                   quote_error = true
                   is_quoted = false
                 end
               end
               
               if char != options[:quote_char] and char != options[:col_sep] and char != options[:escape_char] ## escape_char part
-                puts " > b" if debug and line_number == 0
+                puts " > b" if debug
                 new_col = false
                 if quote_has_ended
-                  puts " > b a" if debug and line_number == 0
+                  puts " > b a" if debug
                   quote_error = true
                 end
               
               elsif char == options[:quote_char] and escape_char
-                puts " > c" if debug and line_number == 0
+                puts " > c" if debug
                 escape_char = false
               
               elsif char == options[:escape_char]
-                puts " > d" if debug and line_number == 0
+                puts " > d" if debug
                 escape_char = true
                 
               elsif char == options[:quote_char] and is_quoted
-                puts " > e" if debug and line_number == 0
+                puts " > e" if debug
                 quote_has_ended = true
                 is_quoted = false
               elsif char == options[:quote_char]
-                puts " > f" if debug and line_number == 0
+                puts " > f" if debug
                 if new_col
-                  puts " > f a" if debug and line_number == 0
+                  puts " > f a" if debug
                   is_quoted = true
                   new_col = false
                 else
-                  puts " > f b" if debug and line_number == 0
+                  puts " > f b" if debug
                   quote_error = true
                 end
               elsif char == options[:col_sep] and ! is_quoted
-                puts " > g" if debug and line_number == 0
+                puts " > g" if debug
                 if quote_error
-                  puts " > g a" if debug and line_number == 0
+                  puts " > g a" if debug
                   quote_errors.push([line_number + 1,col_number + 1,"#{previous_line}#{line[pos_start..(position - 1)]}"])
                   quote_error = false
                 end
                 if ! options[:max_chars_in_field].nil?
-                  puts " > g b" if debug and line_number == 0
-                  length_errors.push([line_number + 1,col_number + 1]) if (field_length - 1) > options[:max_chars_in_field]
+                  puts " > g b" if debug
+                  length_errors.push([line_number + 1,col_number + 1,field_length - 1]) if (field_length - 1) > options[:max_chars_in_field]
                   field_length = 0
                 end
                 new_col = true
@@ -166,11 +166,14 @@ module WtfCSV
           end
           
           if is_quoted
+            puts " > h" if debug
             if options[:allow_row_sep_in_quoted_fields]
+              puts " > h a" if debug
               last_line_ended_quoted = true
               previous_line = "#{previous_line}#{line[pos_start...line.length]}#{options[:row_sep]}"
               next
             else
+              puts " > h b" if debug
               quote_error = true
             end
           end
@@ -178,7 +181,7 @@ module WtfCSV
           quote_errors.push([line_number + 1,col_number + 1,line[pos_start..line.length]]) if quote_error
           
           if ! options[:max_chars_in_field].nil?
-            length_errors.push([line_number + 1,col_number + 1]) if field_length > options[:max_chars_in_field]
+            length_errors.push([line_number + 1,col_number + 1,field_length]) if field_length > options[:max_chars_in_field]
             field_length = 0
           end
           
@@ -198,7 +201,7 @@ module WtfCSV
           end
           
         rescue Exception => e
-          # do nothing
+          puts e
         ensure
           line_number += 1
         end
@@ -228,24 +231,11 @@ module WtfCSV
         end
       end
     end
-    
-    if ! options[:max_chars_in_field].nil? and options[:check_col_count]
-      return {quote_errors: quote_errors,
-              encoding_errors: encoding_errors,
-              column_errors: column_errors,
-              length_errors: length_errors}
-    elsif ! options[:max_chars_in_field].nil?
-      return {quote_errors: quote_errors,
-              encoding_errors: encoding_errors,
-              length_errors: length_errors}
-    elsif options[:check_col_count]
-      return {quote_errors: quote_errors,
-              encoding_errors: encoding_errors,
-              column_errors: column_errors}
-    else
-      return {quote_errors: quote_errors,
-              encoding_errors: encoding_errors}
-    end
+
+    return {quote_errors: quote_errors,
+            encoding_errors: encoding_errors,
+            column_errors: column_errors,
+            length_errors: length_errors}
     
   end
 end
