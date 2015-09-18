@@ -1,4 +1,7 @@
 # WtfCSV
+
+[![Build Status](https://secure.travis-ci.org/gremerritt/wtf_csv.png?branch=master)](http://travis-ci.org/gremerritt/wtf_csv)
+
 `wtf_csv` is a Ruby Gem to detect formatting issues in a CSV
 
 ### Motivation
