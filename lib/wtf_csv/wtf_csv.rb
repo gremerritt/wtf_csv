@@ -197,10 +197,10 @@ module WtfCSV
       end
     end
 
-    return {quote_errors: quote_errors,
-            encoding_errors: encoding_errors,
-            column_errors: column_errors,
-            length_errors: length_errors}
+    return {:quote_errors => quote_errors,
+            :encoding_errors => encoding_errors,
+            :column_errors => column_errors,
+            :length_errors => length_errors}
     
   end
 end
