@@ -49,7 +49,6 @@ This array will always be empty unless the `:max_chars_in_field` option is being
 |---------------------------------|----------|--------------------------------------------------------------------------------------|
 | :col_sep                        |   ','    | Column separator                                                                     |
 | :row_sep                        | $/ ,"\n" | Row separator - defaults to system's $/ , which defaults to "\n"                     |
-|                                 |          | This can also be set to :auto, but will process the whole cvs file first  (slow!)    |
 | :quote_char                     |   '"'    | Quotation character                                                                  |
 | :escape_char                    |   '\'    | Character to escape quotes                                                           |
 |---------------------------------|----------|--------------------------------------------------------------------------------------|

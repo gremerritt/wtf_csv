@@ -18,11 +18,6 @@ module WtfCSV
     f = File.open(file, "r:#{options[:file_encoding]}")
     trgt_line_count = `wc -l "#{file}"`.strip.split(' ')[0].to_i if block_given?
     
-    if options[:row_sep] == :auto
-      options[:row_sep] = SmarterCSV.guess_line_ending(f, options)
-      f.rewind
-    end
-    
     # credit to tilo, author of smarter_csv, on how to loop over lines without reading whole file into memory
     old_row_sep = $/
     $/ = options[:row_sep]
